@@ -1,0 +1,67 @@
+using System;
+using TwinCAT.Ads;
+
+namespace AdsApp
+{
+    internal class Program
+    {
+        private static void Main(string[] args)
+        {
+            // Instancia el cliente para gestionar la comunicacion mediante el protocolo ADS
+            using (AdsClient client = new AdsClient())
+            {
+                // Establece la conexion con el puerto predeterminado del PLC local en el Runtime 1
+                client.Connect("10.55.128.28.1.1", 851);
+
+                // Comprueba si el estado de la conexion con el servidor es activo y exitoso
+                if (client.IsConnected)
+                {
+                    Console.WriteLine("Conexion ADS establecida correctamente.");
+
+                    uint handleBuffer = client.CreateVariableHandle("MAIN.aBuffer");
+
+                    int[] bufferValues = (int[])client.ReadAny(handleBuffer, typeof(int[]), new int[] { 10 });
+                    Console.WriteLine($"Valor actual de MAIN.aBuffer[0]: {bufferValues[0]}");
+
+            
+                    int[] newBufferValues = new int[] { 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000 };
+                    client.WriteAny(handleBuffer, newBufferValues);
+                    Console.WriteLine("Nuevos valores escritos en MAIN.aBuffer.");
+
+                   
+                    client.DeleteVariableHandle(handleBuffer);
+
+                    
+                    uint handleStruct = client.CreateVariableHandle("MAIN.stSensor");
+
+                    // Lee el contenido completo de la estructura mapeada desde el PLC
+                    ST_SensorData sensor = (ST_SensorData)client.ReadAny(handleStruct, typeof(ST_SensorData));
+                    Console.WriteLine($"Estado inicial de la estructura -> bActive: {sensor.bActive}, nId: {sensor.nId}");
+
+                    // Modifica los campos locales de la estructura con nuevos valores de prueba
+                    sensor.bActive = true;
+                    sensor.nId = 42;
+                    sensor.fValue = 12.34f;
+                    sensor.sName = "Sensor_VSCode";
+                    sensor.aValues = new short[] { 1, 2, 3, 4, 5 };
+
+                    // Escribe la estructura modificada de vuelta al servidor ADS del PLC
+                    client.WriteAny(handleStruct, sensor);
+                    Console.WriteLine("Estructura MAIN.stSensor actualizada correctamente.");
+
+                    // Libera el identificador de variable de la estructura en el servidor
+                    client.DeleteVariableHandle(handleStruct);
+                }
+                else
+                {
+                    Console.WriteLine("Error: No se pudo establecer la conexion ADS con el PLC.");
+                }
+
+                client.Disconnect();
+            }
+
+            Console.WriteLine("\nPresione cualquier tecla para salir...");
+            Console.ReadLine();
+        }
+    }
+}

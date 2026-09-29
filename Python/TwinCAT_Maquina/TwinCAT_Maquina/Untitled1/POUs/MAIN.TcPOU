@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{e2589af4-8309-4f69-b885-7e03476d827f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+    fMaxPosition : REAL := 1000.0;
+    fMid1Pos     : REAL := 333.3;
+    fMid2Pos     : REAL := 666.6;
+    fStep        : REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// 1. REARME DE ALARMAS
+IF GVL_HMI.bCmdReset THEN
+    GVL_HMI.bAlarmActive := FALSE;
+    GVL_HMI.sAlarmMsg    := '';
+    GVL_HMI.bCmdReset    := FALSE;
+    IF GVL_HMI.nState = 99 THEN
+        GVL_HMI.nState := 0;
+    END_IF
+END_IF
+
+// 2. PROTECCIÓN DE SOBREVELOCIDAD
+IF GVL_HMI.nSimSpeed > 95 AND NOT GVL_HMI.bAlarmActive THEN
+    GVL_HMI.bAlarmActive := TRUE;
+    GVL_HMI.sAlarmMsg    := 'Sobrevelocidad detectada. Bloqueo de ejes activo.';
+    GVL_HMI.nState       := 99;
+END_IF
+
+// 3. RESET DE SECUENCIA (Abortar y Volver a Origen)
+IF GVL_HMI.bCmdResetSeq THEN
+    GVL_HMI.bCmdResetSeq := FALSE;
+    GVL_HMI.bCmdStart    := FALSE;
+    GVL_HMI.bCmdStop     := FALSE;
+    
+    IF NOT GVL_HMI.bAlarmActive AND NOT GVL_HMI.bModeManual THEN
+        IF GVL_HMI.fPosition > 0.0 THEN
+            GVL_HMI.nState := 21; 
+        ELSE
+            GVL_HMI.nState := 0;  
+        END_IF
+    END_IF
+END_IF
+
+// 4. CÁLCULO DE CINEMÁTICA Y SENSORES
+fStep := (INT_TO_REAL(GVL_HMI.nSimSpeed) / 100.0);
+
+GVL_HMI.bSensorHome := (GVL_HMI.fPosition <= 0.1);
+GVL_HMI.bSensorMid1 := (ABS(GVL_HMI.fPosition - fMid1Pos) <= 0.5);
+GVL_HMI.bSensorMid2 := (ABS(GVL_HMI.fPosition - fMid2Pos) <= 0.5);
+GVL_HMI.bSensorEnd  := (GVL_HMI.fPosition >= (fMaxPosition - 0.1));
+
+// 5. ENRUTAMIENTO LÓGICO Y MÁQUINA DE ESTADOS
+IF GVL_HMI.bAlarmActive THEN
+    GVL_HMI.nState := 99;
+    GVL_HMI.bCmdStart := FALSE;
+    GVL_HMI.bCmdJogFwd := FALSE;
+    GVL_HMI.bCmdJogBwd := FALSE;
+
+ELSIF GVL_HMI.bModeManual THEN
+    GVL_HMI.nState := 30; 
+    GVL_HMI.bCmdStart := FALSE;
+
+    IF GVL_HMI.bCmdJogFwd AND (GVL_HMI.fPosition < fMaxPosition) THEN
+        GVL_HMI.fPosition := GVL_HMI.fPosition + fStep;
+        IF GVL_HMI.fPosition > fMaxPosition THEN GVL_HMI.fPosition := fMaxPosition; END_IF
+    END_IF
+    
+    IF GVL_HMI.bCmdJogBwd AND (GVL_HMI.fPosition > 0.0) THEN
+        GVL_HMI.fPosition := GVL_HMI.fPosition - fStep;
+        IF GVL_HMI.fPosition < 0.0 THEN GVL_HMI.fPosition := 0.0; END_IF
+    END_IF
+
+ELSE
+    CASE GVL_HMI.nState OF
+        0: 
+            IF GVL_HMI.bCmdStart THEN
+                GVL_HMI.bCmdStart := FALSE;
+                GVL_HMI.nState := 10;
+            END_IF
+
+        10: // Avance hacia MID1
+            GVL_HMI.fPosition := GVL_HMI.fPosition + fStep;
+            IF GVL_HMI.fPosition >= fMid1Pos THEN
+                GVL_HMI.fPosition := fMid1Pos;
+                IF GVL_HMI.bModeContinuous THEN
+                    GVL_HMI.nState := 12; // Salta la pausa en modo continuo
+                ELSE
+                    GVL_HMI.nState := 11; // Pausa en modo paso a paso
+                END_IF
+            END_IF
+
+        11: // Pausa en MID1
+            IF GVL_HMI.bCmdStart THEN
+                GVL_HMI.bCmdStart := FALSE;
+                GVL_HMI.nState := 12;
+            END_IF
+
+        12: // Avance hacia MID2
+            GVL_HMI.fPosition := GVL_HMI.fPosition + fStep;
+            IF GVL_HMI.fPosition >= fMid2Pos THEN
+                GVL_HMI.fPosition := fMid2Pos;
+                IF GVL_HMI.bModeContinuous THEN
+                    GVL_HMI.nState := 14; // Salta la pausa en modo continuo
+                ELSE
+                    GVL_HMI.nState := 13; // Pausa en modo paso a paso
+                END_IF
+            END_IF
+
+        13: // Pausa en MID2
+            IF GVL_HMI.bCmdStart THEN
+                GVL_HMI.bCmdStart := FALSE;
+                GVL_HMI.nState := 14;
+            END_IF
+
+        14: // Avance hacia END
+            GVL_HMI.fPosition := GVL_HMI.fPosition + fStep;
+            IF GVL_HMI.fPosition >= fMaxPosition THEN
+                GVL_HMI.fPosition := fMaxPosition;
+                GVL_HMI.nState := 20;
+            END_IF
+
+        20: // Final del recorrido: Espera inicio de retorno o retorna directo si es continuo
+            IF GVL_HMI.bModeContinuous THEN
+                GVL_HMI.nState := 21; // Retorno automático inmediato en continuo
+            ELSIF GVL_HMI.bCmdStart THEN
+                GVL_HMI.bCmdStart := FALSE;
+                GVL_HMI.nState := 21;
+            END_IF
+
+        21: // Retorno a origen
+            GVL_HMI.fPosition := GVL_HMI.fPosition - (fStep * 1.5);
+            IF GVL_HMI.fPosition <= 0.0 THEN
+                GVL_HMI.fPosition := 0.0;
+                IF GVL_HMI.bModeContinuous THEN
+                    GVL_HMI.nState := 10; // Ciclo infinito automático en modo continuo
+                ELSE
+                    GVL_HMI.nState := 0;  // Reposo en paso a paso
+                END_IF
+            END_IF
+
+        30: 
+            IF NOT GVL_HMI.bModeManual THEN
+                GVL_HMI.nState := 0;
+            END_IF
+    END_CASE
+
+    IF GVL_HMI.bCmdStop THEN
+        GVL_HMI.bCmdStop := FALSE;
+        GVL_HMI.bCmdStart := FALSE;
+        GVL_HMI.nState := 0;
+    END_IF
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

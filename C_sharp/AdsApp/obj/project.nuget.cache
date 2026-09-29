@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "+QbwxKS2bSE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\JoanR\\Documents\\Proyectos\\Com_ADS\\C_sharp\\AdsApp\\AdsApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\JoanR\\.nuget\\packages\\beckhoff.twincat.ads\\7.0.303\\beckhoff.twincat.ads.7.0.303.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\beckhoff.twincat.ads.abstractions\\7.0.303\\beckhoff.twincat.ads.abstractions.7.0.303.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\beckhoff.twincat.ads.configurationproviders\\7.0.303\\beckhoff.twincat.ads.configurationproviders.7.0.303.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\beckhoff.twincat.ads.server\\7.0.303\\beckhoff.twincat.ads.server.7.0.303.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.10\\microsoft.extensions.configuration.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.10\\microsoft.extensions.configuration.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.configuration.binder\\10.0.10\\microsoft.extensions.configuration.binder.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.10\\microsoft.extensions.dependencyinjection.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.10\\microsoft.extensions.logging.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.10\\microsoft.extensions.primitives.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\system.componentmodel.composition\\10.0.10\\system.componentmodel.composition.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.10\\system.diagnostics.eventlog.10.0.10.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\system.reactive\\6.1.0\\system.reactive.6.1.0.nupkg.sha512",
+    "C:\\Users\\JoanR\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.10\\system.serviceprocess.servicecontroller.10.0.10.nupkg.sha512"
+  ],
+  "logs": []
+}

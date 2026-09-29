@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL_HMI" Id="{b3524988-e734-4c92-8483-391a27b1292f}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    bModeManual     : BOOL;      
+    bModeContinuous : BOOL;      // TRUE: Continuo sin paradas, FALSE: Multiparada paso a paso
+    
+    bCmdStart       : BOOL;
+    bCmdStop        : BOOL;
+    bCmdReset       : BOOL;
+    bCmdResetSeq    : BOOL;      
+    bCmdJogFwd      : BOOL;      
+    bCmdJogBwd      : BOOL;      
+    
+    nState          : INT;       
+    fPosition       : REAL;
+    nSimSpeed       : INT := 50;
+    
+    bSensorHome     : BOOL;
+    bSensorMid1     : BOOL;
+    bSensorMid2     : BOOL;
+    bSensorEnd      : BOOL;
+    
+    bAlarmActive    : BOOL;
+    sAlarmMsg       : STRING(80);
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
